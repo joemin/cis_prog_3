@@ -3,9 +3,9 @@ import math
 import sys
 from prog_3_functions import *
 
-# if (len(sys.argv) != 4):
-# 	print("The command format should be: ")
-# 	sys.exit(0)
+if (len(sys.argv) != 5):
+	print("The command format should be: python ICP_matching.py Problem3-BodyA.txt Problem3-BodyB.txt PA3-X-ddddd-SampleReadingsTest.txt Problem3Mesh.sur")
+	sys.exit(0)
 
 rigid_a_data = open(sys.argv[1])
 a_first_line = rigid_a_data.readline().split()
@@ -34,16 +34,17 @@ rigid_b_data.close()
 
 
 # Use this to find Fa and Fb
+index1 = int(sys.argv[3].index("PA3-"))
+index2 = int(sys.argv[3].index("-Unknown"))
+filename = sys.argv[3][index1:index2]
+
 sample_readings = open(sys.argv[3])
 sample_readings_first_line = sample_readings.readline().split(",")
 n_s = int(sample_readings_first_line[0].strip())
-# n_a = n_s/4
-# n_b = n_s/4
 n_a = n_a_markers
 n_b = n_b_markers
 n_d = n_s - n_a - n_b
 n_samples = int(sample_readings_first_line[1].strip())
-readings = []
 F_A = []
 F_B = []
 d = []
@@ -60,14 +61,10 @@ for i in range(n_samples):
 		b_current_markers.append([x, y, z])
 	for j in range(n_d):
 		sample_readings.readline()
-	F_A.append(get_frame(numpy.array(a_led_markers).T, numpy.array(a_current_markers).T))
-	F_B.append(get_frame(numpy.array(b_led_markers).T, numpy.array(b_current_markers).T))
+	F_A.append(get_frame(numpy.array(a_current_markers).T, numpy.array(a_led_markers).T))
+	F_B.append(get_frame(numpy.array(b_current_markers).T, numpy.array(b_led_markers).T))
 	d.append(Frame.vec_dot(Frame.frame_dot(F_B[i].inv_frame(), F_A[i]), a_tip).tolist())
-	# readings.append([a_current_markers, b_current_markers])
 sample_readings.close()
-
-# print(Frame.frame_dot(F_A[0], F_B[0]).get_rot())
-# print(d[0])
 
 mesh_data = open(sys.argv[4])
 n_vertices = int(mesh_data.readline().strip())
@@ -86,19 +83,25 @@ mesh_data.close()
 
 # FOR PROG 3: s = d
 s = d
-print(s)
-full_set = []
+c = []
 for point in s:
 	closest_point = None
 	closest_distance = None
 	for t in triangles:
-		# print(point, t)
 		triangle = [vertices[t[0]], vertices[t[1]], vertices[t[2]]]
-		closest_point_on_t = closest_point_on_triangle(point, triangle)
+		closest_point_on_t = closest_point_on_triangle(point[0], triangle)
 		distance = find_distance(point, closest_point_on_t)
 		if (closest_point is None or distance < closest_distance):
 			closest_point = closest_point_on_t
 			closest_distance = distance
-	full_set.append(closest_point.tolist())
+	c.append(closest_point.tolist())
 
-# print(len(full_set), full_set)
+################################################
+### Final output
+################################################
+output = open("OUTPUT/" + filename + "-Output.txt", 'w')
+output.write(str(len(c)) + " " + filename + "-Output.txt\n")
+# Print to standard out and also write to file
+for i in range(n_samples):
+	output.write("%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.2f" % d[i][0][0] + " " + "%.2f" % d[i][0][1] + " " + "%.2f" % d[i][0][2] + "\t%.3f" % find_distance(c[i], d[i][0]) + "\n")
+output.close()

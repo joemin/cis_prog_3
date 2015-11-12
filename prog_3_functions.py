@@ -39,23 +39,19 @@ class Frame:
         if rotation is None:
             self.rotation = [numpy.identity(3)] #the identity matrix should be default
         else:
-            self.rotation = rotation
+            self.rotation = numpy.array(rotation)
         if translation is None:
             self.translation = numpy.array([0, 0, 0]) #default translation should be zero
         else:
-            self.translation = translation
-    def set_rot(self, rotation):
-        self.rotation = rotation
+            self.translation = numpy.array(translation)
     def get_rot(self):
         return self.rotation
-    def set_trans(self, translation):
-        self.translation = translation
     def get_trans(self):
         return self.translation
     def get_inv_rot(self):
         return numpy.linalg.inv(numpy.array(self.rotation))
     def get_inv_trans(self):
-        return numpy.dot(numpy.array(self.get_inv_rot()), numpy.array(self.translation))
+        return numpy.dot(-1*numpy.array(self.get_inv_rot()), numpy.array(self.translation))
     def inv_frame(self):
         return Frame(self.get_inv_rot(), self.get_inv_trans())
     def frame_dot(frame_1, frame_2):
@@ -84,20 +80,20 @@ def get_proj_on_line(point, vert_1, vert_2):
     lam_top = numpy.dot(c-p, q-p)
     lam_bot = numpy.dot(q-p, q-p)
     lam = float(lam_top)/float(lam_bot)
-    lam_star = max(0, min(lam, 1))
+    lam_star = max(0.0, min(lam, 1.0))
+    # print(lam_star)
     return p + lam_star*(q - p)
 
 def closest_point_on_triangle(point, triangle):
     p, q, r = numpy.array(triangle[0]), numpy.array(triangle[1]), numpy.array(triangle[2])
-    # p, q, r = triangle[0], triangle[1], triangle[2]
-    c = numpy.array(get_ortho_proj(point, get_plane(triangle)))[0]
+    c = numpy.array(get_ortho_proj(point, get_plane(triangle)))
     # # # # # # # # # # # # # # # # #
     # Solve: lam(q-p) + mu(r-p) = c-p
     # # # # # # # # # # # # # # # # #
-    lam, mu = numpy.linalg.solve(numpy.array([[q[0]-p[0], q[1]-p[1]], [r[0]-p[0], r[1]-p[1]]]), numpy.array([c[0]-p[0], c[1]-p[1]]))
-    # print(numpy.allclose(numpy.dot(lam, q-p) + numpy.dot(mu, r-p), c))
+    lam, mu = numpy.linalg.solve(numpy.array([[q[0]-p[0], r[0]-p[0]], [q[1]-p[1], r[1]-p[1]]]), numpy.array([c[0]-p[0], c[1]-p[1]]))
     if (lam >= 0 and mu >=0 and lam + mu < 1):
-        return lam*(q-p) + mu*(r-p)
+        return p + lam*(q-p) + mu*(r-p)
+        # return c
     elif (lam < 0 and mu < 0 and lam + mu <= 0):
         return p
     elif (lam < 0 and mu < 1):
