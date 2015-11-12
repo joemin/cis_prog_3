@@ -35,7 +35,11 @@ rigid_b_data.close()
 
 # Use this to find Fa and Fb
 index1 = int(sys.argv[3].index("PA3-"))
-index2 = int(sys.argv[3].index("-Unknown"))
+index2 = 0
+try:
+	index2 = int(sys.argv[3].index("-Unknown"))
+except:
+	index2 = int(sys.argv[3].index("-Sample"))
 filename = sys.argv[3][index1:index2]
 
 sample_readings = open(sys.argv[3])
@@ -103,5 +107,5 @@ output = open("OUTPUT/" + filename + "-Output.txt", 'w')
 output.write(str(len(c)) + " " + filename + "-Output.txt\n")
 # Print to standard out and also write to file
 for i in range(n_samples):
-	output.write("%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.2f" % d[i][0][0] + " " + "%.2f" % d[i][0][1] + " " + "%.2f" % d[i][0][2] + "\t%.3f" % find_distance(c[i], d[i][0]) + "\n")
+	output.write("%.2f" % d[i][0][0] + " " + "%.2f" % d[i][0][1] + " " + "%.2f" % d[i][0][2] + "\t%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.3f" % find_distance(d[i][0], c[i]) + "\n")
 output.close()
