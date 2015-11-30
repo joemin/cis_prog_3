@@ -1,20 +1,18 @@
 import numpy
+from Queue import Queue
+from prog_3_functions import *
 
 class BoundingBox:
-    def __init__(self, triangle):
-        self.upper, self.lower = self.createBoundingBox(triangle)
-        self.triangle = triangle
-        self.leaf = True
-        self.subBoxes = []
     def __init__(self, lower, upper):
         self.upper = upper
         self.lower = lower
         self.triangle = None
         self.leaf = False
-        self.subBoxes = []
-        
+        self.subBoxes = []        
     def createBoundingBox(triangle):
         return None
+    def __str__(self):
+        return str(self.lower) + " " + str(self.upper)
 
     """def findClosestTriangle(point, curBest, curBestTriangle):
         if self.leaf:
@@ -35,6 +33,8 @@ class Point:
         self.x = x
         self.y = y
         self.z = z
+    def __str__(self):
+        return str(self.x) + "," + str(self.y) + "," + str(self.z)
 
 #Finds the median for a list of boxes x,y,or z coordinate
 #At the moment it finds the median of the upper coordinates
@@ -49,14 +49,36 @@ def splitBox(boxes, median, coord):
     l1 = []
     l2 = []
     for box in boxes:
-        if box[coord] < median:
+        if box.upper[coord] < median:
             l1.append(box)
         else:
             l2.append(box)
     return l1, l2
+    
+def findMinMax(triangle, coord):
+    mi = triangle[0][coord]
+    ma = triangle[0][coord]
+    for p in triangle:
+        if p[coord] > ma:
+            ma = p[coord]
+        if p[coord] < mi:
+            mi = p[coord]
+    return mi, ma
+    
+def makeBoundingBox(triangle):
+    maxX, minX = findMinMax(triangle, 0)
+    maxY, minY = findMinMax(triangle, 1)
+    maxZ, minZ = findMinMax(triangle, 2)
+    b = BoundingBox([minX, minY, minZ], [maxX, maxY, maxZ])
+    b.triangle = triangle
+    b.leaf = True
+    return b
+    
 
 
 def makeBox(boxes): #Takes a list of bounding boxes and gives a tight bounding box for them
+    if len(boxes) is 1:
+        return boxes[0]
     maxes = []
     mins = []
     for coord in boxes[0].upper:    #Initialize the maxes and mins
@@ -71,8 +93,8 @@ def makeBox(boxes): #Takes a list of bounding boxes and gives a tight bounding b
     return BoundingBox(mins, maxes)
 
 def pointToTriangle(t, p):  #This actually just gives distance from point to point atm
-    d = (p.x - t.x)**2 + (p.y - t.y)**2 + (p.z-t.z)**2
-    return d
+    p2 = find_closest_triangle(p, t)
+    return find_distance(p, p2)
 
 def findClosestTriangle(point, rootBox):        #Note this only finds closest box at the moment
     closestTriangle = None
@@ -80,11 +102,9 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
     stack= []
     stack.append(rootBox)
     while not len(stack) == 0:
-        print("iterating")
         box = stack.pop()
         if (not closestTriangle is None) and ((point.x + dist < box.lower[0]) or (point.x - dist > box.upper[0]) or (point.y + dist < box.lower[1]) or (point.y - dist > box.upper[1]) or (point.z + dist < box.lower[2]) or (point.z - dist > box.upper[2])):
                continue
-        print ("past intersect check")
         if (box.leaf):
              d = pointToTriangle(box.triangle, point)
              if ((d < dist) or (dist is None)):
@@ -104,42 +124,80 @@ def constructTree(boxes):
     listQueue.put(boxes)
     while not boxQueue.empty():
         curBox = boxQueue.get()
-        if curBox.leaf: #Potentially might need to pop from listqueue
+        curList = listQueue.get()
+        if curBox.leaf or len(curList) is 1: #Potentially might need to pop from listqueue
+            curBox.leaf = True
             continue
         else:
-            curList = listQueue.get()
             m = findMedian(curList, curBox.coordSplit)
             l1,l2 = splitBox(curList, m, curBox.coordSplit)
-            box1 = makeBox(l1)
-            box2 = makeBox(l2)
             c = (curBox.coordSplit + 1) % 3
-            box1.coordSplit = c
-            box2.coordSplit = c
-            curBox.subBoxes.append(box1)
-            curBox.subBoxes.append(box2)
-            listQueue.put(l1)
-            listQueue.put(l2)
-            boxQueue.put(box1)
-            boxQueue.put(box2)
+            if (len(l1) > 0):#Can be zero if all the boxes lie in the same plane (i.e. everything is 0 in the z coordinate)
+                box1 = makeBox(l1)
+                box1.coordSplit = c
+                curBox.subBoxes.append(box1)
+                listQueue.put(l1)
+                boxQueue.put(box1)
+            if (len(l2) > 0):
+                box2 = makeBox(l2)
+                box2.coordSplit = c
+                curBox.subBoxes.append(box2)
+                listQueue.put(l2)
+                boxQueue.put(box2)
+    return b
             
         
 
+t = [[-3,7,0],[2,4,0],[4,0,0]]
+p = [0,0,0]
 
-box = BoundingBox(Point(0,0,0), Point(5,5,0))
-box2 = BoundingBox(Point(0,0,0), Point(3,5,0))
+print closest_point_on_triangle(p, t)
+
+"""box1 = BoundingBox([1,10,0], [3,12,0])
+box1.leaf = True
+box1.triangle = Point(2, 11, 0)
+box2 = BoundingBox([3,4,0], [8,8,0])
 box2.leaf = True
-box3 = BoundingBox(Point(3,0,0), Point(5,5,0))
+box2.triangle = Point(5, 6, 0)
+box3 = BoundingBox([10,20,0], [13,22,0])
 box3.leaf = True
-box.subBoxes.append(box2)
-box.subBoxes.append(box3)
-box2.triangle = Point(1,3,0)
-box3.triangle = Point(3,2,0)
-point = Point(1,1,1)
+box3.triangle = Point(12, 21, 0)
+box4 = BoundingBox([20,12,0], [25,17,0])
+box4.leaf = True
+box4.triangle = Point(22, 15, 0)
+box5 = BoundingBox([6,9,0], [11,15,0])
+box5.leaf = True
+box5.triangle = Point(8,12,0)
+box = BoundingBox([0,0,0],[30,30,0])
+box.subBoxes = [box1, box2, box3, box4, box5]
 
-print findClosestTriangle(point, box).z
+test = [box4, box3]
+
+#a,b = splitBox(test, findMedian(box.subBoxes, 0), 0)
+
+#c = makeBox(a)
+
+d = constructTree(box.subBoxes)
+
+point = Point(15,21, 0)
+
+print findClosestTriangle(point, d)"""
 
 """dist = 1
 if ((point.x + dist < box.lower.x) or (point.x - dist > box.upper.x) or (point.y + dist < box.lower.y) or (point.y - dist > box.upper.y) or (point.z + dist < box.lower.z) or (point.z - dist > box.upper.z)):
     print "No intersection"
 else:
     print "Intersection" """
+
+
+
+
+
+
+
+
+
+
+
+
+
