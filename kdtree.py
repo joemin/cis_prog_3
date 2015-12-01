@@ -151,12 +151,12 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
         else:
             if (len(box.subBoxes) is 2) and (not (box.medSplit is None)):
                # print box.level, " ", point[box.coordSplit]," ", box, " ", box.medSplit, " ", box.coordSplit, " ", box.subBoxes[0], " ", box.subBoxes[1]
-                if (point[box.coordSplit] > box.medSplit):
-                    stack.append(box.subBoxes[0])
+                if (point[box.coordSplit] < box.medSplit):
                     stack.append(box.subBoxes[1])
+                    stack.append(box.subBoxes[0])
                 else:
-                    stack.append(box.subBoxes[1])
                     stack.append(box.subBoxes[0])
+                    stack.append(box.subBoxes[1])
             else:
                 for child in box.subBoxes:
                     stack.append(child)
