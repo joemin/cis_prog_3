@@ -123,27 +123,6 @@ def boxesIntersect(box1, box2):
         return False
     return True
 
-def boxesIntersect2(box1, box2):
-    if (box1.upper[0] < box2.lower[0]):
-        print "a"
-        return False
-    if (box1.upper[1] < box2.lower[1]):
-        return False
-        print "b"
-    if (box1.upper[2] < box2.lower[2]):
-        return False
-        print "c"
-    if (box1.lower[0] > box2.upper[0]):
-        return False
-        print "d"
-    if (box1.lower[1] > box2.upper[1]):
-        return False
-        print "e"
-    if (box1.lower[2] > box2.upper[2]):
-        return False
-        print "f"
-    return True
-
 def findClosestTriangle(point, rootBox):        #Note this only finds closest box at the moment
     closestTriangle = None
     dist = None
@@ -158,12 +137,6 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
         if (not closestTriangle is None) and not boxesIntersect(box, newBox):
               if (box.leaf and dist < 1):
                 d = pointToTriangle(box.triangle, point)
-                # if (d<.1):
-                    # print box
-                    # printTriangle(closestTriangle)
-                    # print newBox
-                    # printTriangle(box.triangle)
-                    # print d
               continue
         if (box.leaf):
              d = pointToTriangle(box.triangle, point)
@@ -171,8 +144,17 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
                  closestTriangle = box.triangle
                  dist = d
         else:
-            for child in box.subBoxes:
-                stack.append(child)
+            if (len(box.subBoxes) is 2) and (not (box.medSplit is None)):
+                print "using point test"
+                if (point[box.coordSplit] < box.medSplit):
+                    stack.append(box.subBoxes[0])
+                    stack.append(box.subBoxes[1])
+                else:
+                    stack.append(box.subBoxes[0])
+                    stack.append(box.subBoxes[1])
+            else:
+                for child in box.subBoxes:
+                    stack.append(child)
     return closestTriangle
 
 def printTriangle(triangle):
@@ -203,19 +185,21 @@ def constructTree(boxes):
                 # print "Using Lower instead"
                 m = findMedian(curList, curBox.coordSplit, False)
                 l1,l2 = splitBox(curList, m, curBox.coordSplit, False)
-            if ((len(l1) is 0) or (len(l2) is 0)) and ((len(l2) is 2) or (len(l2) is 3) or (len(l1) is 2) or (len(l1) is 3)):   #Potentially is making the wrong bounds for the parent box
+            if ((len(l1) is 0) or (len(l2) is 0)) and ((len(l2) is 2) or (len(l2) is 3) or (len(l1) is 2) or (len(l1) is 3)):   #Weird edge case where 2 or 3 boxes can all be on the same side of the median no matter which coordinate you are attempting to split on
                 for box in l1:
                     box.leaf = True
                     curBox.subBoxes.append(box)
                 for box in l2:
                     box.leaf = True
                     curBox.subBoxes.append(box)
+                curBox.medSplit = None
                 continue
             # print m, curBox.coordSplit
             # for box in l2:
              # print box
             #     # printTriangle(box.triangle)
             # print "\n"
+            curBox.medSplit = m
             c = (curBox.coordSplit + 1) % 3
             if (len(l1) > 0):#Can be zero if all the boxes lie in the same plane (i.e. everything is 0 in the z coordinate)
                 box1 = makeBox(l1)
