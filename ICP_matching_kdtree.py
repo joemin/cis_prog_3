@@ -1,6 +1,7 @@
 import numpy
 import math
 import sys
+import copy
 from prog_3_functions import *
 from kdtree import *
 from Queue import Queue
@@ -37,7 +38,11 @@ rigid_b_data.close()
 
 
 # Use this to find Fa and Fb
-index1 = int(sys.argv[3].index("PA3-"))
+index1 = 0
+try:
+	index1 = int(sys.argv[3].index("PA3-"))
+except:
+	index1 = int(sys.argv[3].index("PA4-"))
 index2 = 0
 try:
 	index2 = int(sys.argv[3].index("-Unknown"))
@@ -70,7 +75,8 @@ for i in range(n_samples):
 		sample_readings.readline()
 	F_A.append(get_frame(numpy.array(a_current_markers).T, numpy.array(a_led_markers).T))
 	F_B.append(get_frame(numpy.array(b_current_markers).T, numpy.array(b_led_markers).T))
-	d.append(Frame.vec_dot(Frame.frame_dot(F_B[i].inv_frame(), F_A[i]), a_tip).tolist())
+	d.append(Frame.vec_dot(Frame.frame_dot(F_B[i].inv_frame(), F_A[i]), a_tip).tolist()[0])
+	# print(d)
 sample_readings.close()
 
 mesh_data = open(sys.argv[4])
@@ -91,6 +97,7 @@ for i in range(n_indices):
 	boxes.append(makeBoundingBox(triangle))
 mesh_data.close()
 
+# print(len(triangles))
 # print("start")
 root_box = constructTree(boxes)
 # print("test")
@@ -108,30 +115,27 @@ while not q.empty():
 
 
 # FOR PROG 3: s = d
+# print(d[:10])
+# d_copy = copy.deepcopy(d)
 s = d
-c = []
-for point in s:
-	closest_point = None
-	closest_distance = None
-	first_closest_triangle = None
-	for t in triangles:
-		triangle = [vertices[t[0]], vertices[t[1]], vertices[t[2]]]
-		closest_point_on_t = closest_point_on_triangle(point[0], triangle)
-		distance = find_distance(point, closest_point_on_t)
-		if (closest_point is None or distance < closest_distance):
-			closest_point = closest_point_on_t
-			closest_distance = distance
-			first_closest_triangle = triangle
-	# print(point[0])
-	closest_triangle = findClosestTriangle(point[0], root_box) #kdtree method
-	# print "*******"
-	# printTriangle(first_closest_triangle)
-	# printTriangle(closest_triangle)
-	closest_point = closest_point_on_triangle(point[0], closest_triangle)
-	# print(closest_point)
-	print("==================================")
-	c.append(closest_point.tolist())
+for i in range(10):
+	c = []
+	print(i)
+	for point in s:
+		closest_triangle = findClosestTriangle(point, root_box) #kdtree method
+		closest_point = closest_point_on_triangle(point, closest_triangle)
+		c.append(closest_point.tolist())
+	# print s
+	# print numpy.allclose(s, c, rtol=1e-02)
+	# print c
+	f_reg = get_frame(numpy.array(c).T, numpy.array(s).T)
+	# print(f_reg.get_rot(), f_reg.get_trans())
+	new_s = numpy.array(Frame.cloud_dot(f_reg, s))
+	# print(new_s.T)
+	s = new_s
 
+# print(d_copy[:10])
+# print d[:10]
 ################################################
 ### Final output
 ################################################
@@ -139,5 +143,5 @@ output = open("OUTPUT/" + filename + "-Output.txt", 'w')
 output.write(str(len(c)) + " " + filename + "-Output.txt\n")
 # Print to standard out and also write to file
 for i in range(n_samples):
-	output.write("%.2f" % d[i][0][0] + " " + "%.2f" % d[i][0][1] + " " + "%.2f" % d[i][0][2] + "\t%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.3f" % find_distance(d[i][0], c[i]) + "\n")
+	output.write("%.2f" % s[i][0] + " " + "%.2f" % s[i][1] + " " + "%.2f" % s[i][2] + "\t%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.3f" % find_distance(s[i], c[i]) + "\n")
 output.close()

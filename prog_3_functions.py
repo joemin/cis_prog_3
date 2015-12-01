@@ -60,6 +60,12 @@ class Frame:
         return Frame(new_rot, new_trans)
     def vec_dot(frame, vector):
         return numpy.dot(numpy.array(frame.get_rot()), numpy.array(vector)) + numpy.array(frame.get_trans()).T
+    def cloud_dot(frame, cloud):
+        new_cloud = []
+        for point in cloud:
+            new_point = Frame.vec_dot(frame, numpy.array(point).T)
+            new_cloud.append(new_point[0].tolist())
+        return new_cloud
 
 def get_plane(triangle):
     apex = numpy.array(triangle[0])
@@ -108,5 +114,9 @@ def closest_point_on_triangle(point, triangle):
         return get_proj_on_line(c, r, q)
 
 def find_distance(point_1, point_2):
+    p_1, p_2 = numpy.array(point_1), numpy.array(point_2)
+    return numpy.linalg.norm(p_2 - p_1)
+
+def find_true_distance(point_1, point_2):
     p_1, p_2 = numpy.array(point_1), numpy.array(point_2)
     return numpy.linalg.norm(p_2 - p_1)

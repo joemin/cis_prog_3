@@ -158,12 +158,12 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
         if (not closestTriangle is None) and not boxesIntersect(box, newBox):
               if (box.leaf and dist < 1):
                 d = pointToTriangle(box.triangle, point)
-                if (d<.1):
-                    print box
-                    printTriangle(closestTriangle)
-                    print newBox
-                    printTriangle(box.triangle)
-                    print d
+                # if (d<.1):
+                    # print box
+                    # printTriangle(closestTriangle)
+                    # print newBox
+                    # printTriangle(box.triangle)
+                    # print d
               continue
         if (box.leaf):
              d = pointToTriangle(box.triangle, point)
@@ -242,7 +242,7 @@ def constructTree(boxes):
 
 # constructTree([b1, b2, b3])
 
-print makeBoundingBox([[2.190276, -7.224511, 58.876591],[1.744815, -7.125705, 55.080135],[4.860498, -7.415166, 54.500889]])
+# print makeBoundingBox([[2.190276, -7.224511, 58.876591],[1.744815, -7.125705, 55.080135],[4.860498, -7.415166, 54.500889]])
 
 
 
