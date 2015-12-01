@@ -1,6 +1,7 @@
 import numpy
 from Queue import Queue
 from prog_3_functions import *
+import time
 
 class BoundingBox:
     def __init__(self, lower, upper):
@@ -128,33 +129,39 @@ def findClosestTriangle(point, rootBox):        #Note this only finds closest bo
     dist = None
     stack= []
     stack.append(rootBox)
+    checkedSum = 0
+    examinedSum = 0
+    distBox = None
     # print(pointIn)
     # point = Point(pointIn[0][0], pointIn[0][1], pointIn[0][2])
     while not len(stack) == 0:
         box = stack.pop()
-        if not dist is None:
-            newBox = BoundingBox([point[0] - dist, point[1] - dist, point[2] - dist], [point[0] + dist, point[1] + dist, point[2] + dist])
-        if (not closestTriangle is None) and not boxesIntersect(box, newBox):
+        examinedSum = examinedSum + 1
+        if (not closestTriangle is None) and not boxesIntersect(box, distBox):
               if (box.leaf and dist < 1):
                 d = pointToTriangle(box.triangle, point)
               continue
+        checkedSum = checkedSum + 1
         if (box.leaf):
              d = pointToTriangle(box.triangle, point)
              if ((d < dist) or (dist is None)):
                  closestTriangle = box.triangle
                  dist = d
+                 distBox = BoundingBox([point[0] - dist, point[1] - dist, point[2] - dist], [point[0] + dist, point[1] + dist, point[2] + dist])
         else:
             if (len(box.subBoxes) is 2) and (not (box.medSplit is None)):
-                print "using point test"
-                if (point[box.coordSplit] < box.medSplit):
+               # print box.level, " ", point[box.coordSplit]," ", box, " ", box.medSplit, " ", box.coordSplit, " ", box.subBoxes[0], " ", box.subBoxes[1]
+                if (point[box.coordSplit] > box.medSplit):
                     stack.append(box.subBoxes[0])
                     stack.append(box.subBoxes[1])
                 else:
-                    stack.append(box.subBoxes[0])
                     stack.append(box.subBoxes[1])
+                    stack.append(box.subBoxes[0])
             else:
                 for child in box.subBoxes:
                     stack.append(child)
+    #print "Popped ", examinedSum, " off the stack"
+    #print "Expanded ", checkedSum, " of those boxes"
     return closestTriangle
 
 def printTriangle(triangle):
@@ -168,6 +175,7 @@ def constructTree(boxes):
     listQueue = Queue()
     b = makeBox(boxes)
     b.coordSplit = 0
+    b.level = 0
     boxQueue.put(b)
     listQueue.put(boxes)
     while not boxQueue.empty():
@@ -188,9 +196,11 @@ def constructTree(boxes):
             if ((len(l1) is 0) or (len(l2) is 0)) and ((len(l2) is 2) or (len(l2) is 3) or (len(l1) is 2) or (len(l1) is 3)):   #Weird edge case where 2 or 3 boxes can all be on the same side of the median no matter which coordinate you are attempting to split on
                 for box in l1:
                     box.leaf = True
+                    box.level = curBox.level + 1
                     curBox.subBoxes.append(box)
                 for box in l2:
                     box.leaf = True
+                    box.level = curBox.level+1
                     curBox.subBoxes.append(box)
                 curBox.medSplit = None
                 continue
@@ -204,12 +214,14 @@ def constructTree(boxes):
             if (len(l1) > 0):#Can be zero if all the boxes lie in the same plane (i.e. everything is 0 in the z coordinate)
                 box1 = makeBox(l1)
                 box1.coordSplit = c
+                box1.level = curBox.level + 1
                 curBox.subBoxes.append(box1)
                 listQueue.put(l1)
                 boxQueue.put(box1)
             if (len(l2) > 0):
                 box2 = makeBox(l2)
                 box2.coordSplit = c
+                box2.level = curBox.level + 1
                 curBox.subBoxes.append(box2)
                 listQueue.put(l2)
                 boxQueue.put(box2)
