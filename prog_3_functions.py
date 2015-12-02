@@ -116,7 +116,3 @@ def closest_point_on_triangle(point, triangle):
 def find_distance(point_1, point_2):
     p_1, p_2 = numpy.array(point_1), numpy.array(point_2)
     return numpy.linalg.norm(p_2 - p_1)
-
-def find_true_distance(point_1, point_2):
-    p_1, p_2 = numpy.array(point_1), numpy.array(point_2)
-    return numpy.linalg.norm(p_2 - p_1)

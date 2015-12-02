@@ -153,7 +153,7 @@ while not done:
 		change_mean_diff = mean_distances[i-1] - mean_distances[i]
 
 	# Check to see if we can be done
-	if change_mean_diff < .000001 or i > 100 or mean_distance < .001:
+	if i > 100 or mean_distance < .001:
 		done = True
 
 	# Get new f_reg
