@@ -118,21 +118,50 @@ while not q.empty():
 # print(d[:10])
 # d_copy = copy.deepcopy(d)
 s = d
-for i in range(10):
+mean_distances = []
+done = False
+i = 0
+change_mean_diff = 999
+while not done:
 	c = []
 	print(i)
 	for point in s:
 		closest_triangle = findClosestTriangle(point, root_box) #kdtree method
 		closest_point = closest_point_on_triangle(point, closest_triangle)
 		c.append(closest_point.tolist())
-	# print s
-	# print numpy.allclose(s, c, rtol=1e-02)
-	# print c
-	f_reg = get_frame(numpy.array(c).T, numpy.array(s).T)
-	# print(f_reg.get_rot(), f_reg.get_trans())
+
+	# point_diffs = numpy.array(s - c)
+	diffs = []
+	# w = []
+	for j in range(len(s)):
+		diffs.append(find_distance(s[j], c[j]))
+	mean_distance = numpy.mean(diffs)
+	mean_distances.append(mean_distance)
+	std = numpy.std(diffs)
+
+	# Exclude data points by building weight matrices
+	weighted_s = []
+	weighted_c = []
+	for j in range(len(diffs)):
+		if (float(diffs[i]) > (float(mean_distance) + 4*float(std))):
+			weighted_s.append([0, 0, 0])
+			weighted_c.append([0, 0, 0])
+		else:
+			weighted_s.append(s[j])
+			weighted_c.append(c[j])
+	if i > 0:
+		change_mean_diff = mean_distances[i-1] - mean_distances[i]
+
+	# Check to see if we can be done
+	if change_mean_diff < .000001 or i > 100 or mean_distance < .001:
+		done = True
+
+	# Get new f_reg
+	f_reg = get_frame(numpy.array(weighted_c).T, numpy.array(weighted_s).T)
 	new_s = numpy.array(Frame.cloud_dot(f_reg, s))
-	# print(new_s.T)
 	s = new_s
+	i = i+1
+print(mean_distances)
 
 # print(d_copy[:10])
 # print d[:10]
