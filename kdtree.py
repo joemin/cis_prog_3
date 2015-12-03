@@ -3,6 +3,8 @@ from Queue import Queue
 from prog_3_functions import *
 import time
 
+# This class defines a bounding box, which has an upper and lower corner
+# Bounding boxes can be leaves, which means they contain a triangle, or not in which case they have subBoxes
 class BoundingBox:
     def __init__(self, lower, upper):
         self.upper = upper
@@ -15,27 +17,6 @@ class BoundingBox:
     def __str__(self):
         return str(self.lower) + " " + str(self.upper)
 
-    """def findClosestTriangle(point, curBest, curBestTriangle):
-        if self.leaf:
-            return self.Triangle
-        if (not curBestPoint is None) and
-           (curBest.x + curBestPoint.x > self.upper.x) or (curBest.x - curBestPoint.x < self.lower.x) or
-           (curBest.y + curBestPoint.y > self.upper.y) or (curBest.y - curBestPoint.y < self.upper.y) or
-           (curBest.z + curBestPoint.z > self.upper.z) or (curBest.z - curBestPoint.z < self.upper.z):
-               return None, None
-        else:
-            thisClosestDist = None
-            thisClosestTriangle 
-            for box in subBoxes:
-                return subBoxes.findClosestTriangle"""
-
-class Point:
-    def __init__(self, x,y,z):
-        self.x = x
-        self.y = y
-        self.z = z
-    def __str__(self):
-        return str(self.x) + "," + str(self.y) + "," + str(self.z)
 
 #Finds the median for a list of boxes x,y,or z coordinate
 #At the moment it finds the median of the upper coordinates
@@ -49,7 +30,9 @@ def findMedian(boxes, coord, upper):   #coord must be either 0,1, or 2. 0 = x, 1
             coords.append(box.lower[coord])
     return numpy.median(coords)
 
-#Splits on the upper coordinate at the moment
+#Splits the set of boxes based on the median value
+#Coord indicates which coordinate to split the boxes by (0=x, 1=y, 2=z)
+#Upper indicates whether to split on the upper or lower corner coordinate (True=upper, False=lower)
 def splitBox(boxes, median, coord, upper):
     l1 = []
     l2 = []
@@ -67,6 +50,9 @@ def splitBox(boxes, median, coord, upper):
                 l2.append(box)
     return l1, l2
     
+#Finds the min and the max coordinate values for a specific dimension of a triangle
+#Coord indicates which dimension to find the min and max values for
+#NOTE: Mi=min, ma=max, but min and max are reserved keywords in python so I had to use mi and max
 def findMinMax(triangle, coord):
     mi = triangle[0][coord]
     ma = triangle[0][coord]
@@ -78,6 +64,7 @@ def findMinMax(triangle, coord):
     return ma, mi
 
 #Param triangle is a list of three points 
+#Creates a bounding box for a triangle
 def makeBoundingBox(triangle):
     maxX, minX = findMinMax(triangle, 0)
     maxY, minY = findMinMax(triangle, 1)
@@ -87,9 +74,8 @@ def makeBoundingBox(triangle):
     b.leaf = True
     return b
     
-
-
-def makeBox(boxes): #Takes a list of bounding boxes and gives a tight bounding box for them
+#Takes a list of bounding boxes and gives a tight bounding box for them
+def makeBox(boxes):
     if len(boxes) is 1:
         return boxes[0]
     maxes = []
@@ -104,11 +90,13 @@ def makeBox(boxes): #Takes a list of bounding boxes and gives a tight bounding b
             if (mins[i] > box.lower[i]):
                 mins[i] = box.lower[i]
     return BoundingBox(mins, maxes)
-
-def pointToTriangle(t, p):  #This actually just gives distance from point to point atm
+    
+#Finds the shortest distance between triangle t and point p
+def pointToTriangle(t, p): 
     p2 = closest_point_on_triangle(p, t)
     return find_distance(p, p2)
 
+#Checks if two boxes intersect
 def boxesIntersect(box1, box2):
     if (box1.upper[0] < box2.lower[0]):
         return False
@@ -124,52 +112,45 @@ def boxesIntersect(box1, box2):
         return False
     return True
 
-def findClosestTriangle(point, rootBox):        #Note this only finds closest box at the moment
+#Finds the closest triangle to a point using the Tree that rootBox is the root of
+#Further explanation inside of report, but it essentially does a depth first search of the tree
+#    and only adds a node's children to the stack if the node is within the "bounding box" determined
+#    by the current closest distance found and the point passed in
+def findClosestTriangle(point, rootBox):
     closestTriangle = None
     dist = None
     stack= []
     stack.append(rootBox)
-    checkedSum = 0
-    examinedSum = 0
     distBox = None
-    # print(pointIn)
-    # point = Point(pointIn[0][0], pointIn[0][1], pointIn[0][2])
     while not len(stack) == 0:
         box = stack.pop()
-        examinedSum = examinedSum + 1
-        if (not closestTriangle is None) and not boxesIntersect(box, distBox):
-              if (box.leaf and dist < 1):
-                d = pointToTriangle(box.triangle, point)
+        if (not closestTriangle is None) and not boxesIntersect(box, distBox):   #If the box does not intersect with the bounding box from the given point, then we're done looking at it
+              """if (box.leaf and dist < 1):
+                d = pointToTriangle(box.triangle, point)"""
               continue
-        checkedSum = checkedSum + 1
-        if (box.leaf):
+        if (box.leaf): # If it is a leaf check if the distance from its triangle to the point is less than the current best distance found
              d = pointToTriangle(box.triangle, point)
              if ((d < dist) or (dist is None)):
                  closestTriangle = box.triangle
                  dist = d
                  distBox = BoundingBox([point[0] - dist, point[1] - dist, point[2] - dist], [point[0] + dist, point[1] + dist, point[2] + dist])
         else:
-            if (len(box.subBoxes) is 2) and (not (box.medSplit is None)):
-               # print box.level, " ", point[box.coordSplit]," ", box, " ", box.medSplit, " ", box.coordSplit, " ", box.subBoxes[0], " ", box.subBoxes[1]
+            if (len(box.subBoxes) is 2) and (not (box.medSplit is None)):  #We need this check because of the weird three box edge case. Basically this is checking to make sure the node is normal
                 if (point[box.coordSplit] < box.medSplit):
                     stack.append(box.subBoxes[1])
                     stack.append(box.subBoxes[0])
                 else:
                     stack.append(box.subBoxes[0])
                     stack.append(box.subBoxes[1])
-            else:
+            else:                                                           #If the node was impossible to split, then just add all of its children to the stack (they should all be leaves so this shouldn't have a major performance impact).
                 for child in box.subBoxes:
                     stack.append(child)
-    #print "Popped ", examinedSum, " off the stack"
-    #print "Expanded ", checkedSum, " of those boxes"
     return closestTriangle
 
-def printTriangle(triangle):
-    if triangle is None:
-        return
-    print str(triangle[0]) + "," + str(triangle[1]) + "," + str(triangle[2])
 
-# Param boxes is a list
+# Takes in a list of leaf boxes and constructs a KD-tree out of them. Returns the root box
+#Read report for further detail but essentially just creates a bounding box for the entire set of
+#   boxes, then splits it in half and makes a bounding box for each side, then recurses on each side, etc...
 def constructTree(boxes):
     boxQueue = Queue()
     listQueue = Queue()
@@ -179,18 +160,15 @@ def constructTree(boxes):
     boxQueue.put(b)
     listQueue.put(boxes)
     while not boxQueue.empty():
-        # print "\n"
-        # print boxQueue.qsize()
         curBox = boxQueue.get()
         curList = listQueue.get()
-        if curBox.leaf or len(curList) is 1: #Potentially might need to pop from listqueue
+        if curBox.leaf or len(curList) is 1: 
             curBox.leaf = True
             continue
         else:
             m = findMedian(curList, curBox.coordSplit, True)
             l1,l2 = splitBox(curList, m, curBox.coordSplit, True)
-            if (len(l1) is 0) or (len(l2) is 0):
-                # print "Using Lower instead"
+            if (len(l1) is 0) or (len(l2) is 0):   #If we couldn't split using the upper coordinate, try with the lower one instead
                 m = findMedian(curList, curBox.coordSplit, False)
                 l1,l2 = splitBox(curList, m, curBox.coordSplit, False)
             if ((len(l1) is 0) or (len(l2) is 0)) and ((len(l2) is 2) or (len(l2) is 3) or (len(l1) is 2) or (len(l1) is 3)):   #Weird edge case where 2 or 3 boxes can all be on the same side of the median no matter which coordinate you are attempting to split on
@@ -204,13 +182,8 @@ def constructTree(boxes):
                     curBox.subBoxes.append(box)
                 curBox.medSplit = None
                 continue
-            # print m, curBox.coordSplit
-            # for box in l2:
-             # print box
-            #     # printTriangle(box.triangle)
-            # print "\n"
-            curBox.medSplit = m
-            c = (curBox.coordSplit + 1) % 3
+            curBox.medSplit = m     #We managed to split! Yay! Now we create the subBoxes
+            c = (curBox.coordSplit + 1) % 3 #They will be split by the next dimension in the sequence
             if (len(l1) > 0):#Can be zero if all the boxes lie in the same plane (i.e. everything is 0 in the z coordinate)
                 box1 = makeBox(l1)
                 box1.coordSplit = c
@@ -225,7 +198,6 @@ def constructTree(boxes):
                 curBox.subBoxes.append(box2)
                 listQueue.put(l2)
                 boxQueue.put(box2)
-        # print boxQueue.qsize()
     return b
             
 
