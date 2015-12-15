@@ -64,13 +64,15 @@ def findMinMax(triangle, coord):
     return ma, mi
 
 #Param triangle is a list of three points 
+#index is the triangle index in the mesh
 #Creates a bounding box for a triangle
-def makeBoundingBox(triangle):
+def makeBoundingBox(triangle, index):
     maxX, minX = findMinMax(triangle, 0)
     maxY, minY = findMinMax(triangle, 1)
     maxZ, minZ = findMinMax(triangle, 2)
     b = BoundingBox([minX, minY, minZ], [maxX, maxY, maxZ])
     b.triangle = triangle
+    b.index = index
     b.leaf = True
     return b
     
@@ -119,6 +121,7 @@ def boxesIntersect(box1, box2):
 #    by the current closest distance found and the point passed in
 def findClosestTriangle(point, rootBox):
     closestTriangle = None
+    closestIndex = None
     dist = None
     stack= []
     stack.append(rootBox)
@@ -133,6 +136,7 @@ def findClosestTriangle(point, rootBox):
              d = pointToTriangle(box.triangle, point)
              if ((d < dist) or (dist is None)):
                  closestTriangle = box.triangle
+                 closestIndex = box.index
                  dist = d
                  distBox = BoundingBox([point[0] - dist, point[1] - dist, point[2] - dist], [point[0] + dist, point[1] + dist, point[2] + dist])
         else:
@@ -146,7 +150,7 @@ def findClosestTriangle(point, rootBox):
             else:                                                           #If the node was impossible to split, then just add all of its children to the stack (they should all be leaves so this shouldn't have a major performance impact).
                 for child in box.subBoxes:
                     stack.append(child)
-    return closestTriangle
+    return closestTriangle, closestIndex
 
 
 # Takes in a list of leaf boxes and constructs a KD-tree out of them. Returns the root box

@@ -91,7 +91,7 @@ def get_input(args):
 		i_1, i_2, i_3 = int(current_indices[0].strip()), int(current_indices[1].strip()), int(current_indices[2].strip())
 		triangles.append([i_1, i_2, i_3])
 		triangle = [vertices[triangles[i][0]], vertices[triangles[i][1]], vertices[triangles[i][2]]]
-		boxes.append(makeBoundingBox(triangle))
+		boxes.append(makeBoundingBox(triangle, i))
 	mesh_data.close()
 
 	mode_data = open(args[5])
