@@ -16,16 +16,20 @@ if (len(sys.argv) != 6):
 n_samples, d, vertices, triangle_indices, boxes, filename, atlas, lambdas = get_input(sys.argv)
 s = d
 
+# print(vertices[:10])
+
 # Make KD tree
 # Compute closest points on current mesh (use s to get c)
 # Calculate q, then lambdas, then new mesh.
 # Repeat
-for i in range(5):
+for i in range(10):
+	print i
 	root_box = construct_tree(boxes)
 	s, c, closest_indices = converge_closest_points_on_mesh(s, root_box)
-	q = get_all_q(c, vertices, lambdas, closest_indices)
-	lambdas = leastSquares(c, q)
-	vertices = computeMesh(lambdas, atlas)
+	q = get_all_q(c, vertices, closest_indices, len(atlas))
+	lambdas = leastSquares(numpy.array(c), numpy.array(q))
+	vertices = computeMesh(numpy.array(lambdas), numpy.array(atlas))
+	boxes = new_boxes(vertices, triangle_indices)
 
 
 

@@ -221,6 +221,18 @@ def construct_tree(boxes):
     return root_box
             
 
+def new_boxes(vertices, indices):
+    boxes = []
+    triangles = []
+    n_indices = len(indices)
+    for i in range(n_indices):
+        current_index = indices[i]
+        i_1, i_2, i_3 = current_index[0], current_index[1], current_index[2]
+        triangles.append([i_1, i_2, i_3])
+        triangle = [vertices[triangles[i][0]], vertices[triangles[i][1]], vertices[triangles[i][2]]]
+        boxes.append(makeBoundingBox(triangle, [i_1, i_2, i_3]))
+    return boxes
+
 # b1 = BoundingBox([-12.513461, -27.024874, -14.898345], [-16.716616, -29.941799, -19.676682])
 # b1.leaf = True
 # b2 = BoundingBox([-10.566681, -27.024874, -14.898345], [-12.763243, -29.941799, -19.676682])

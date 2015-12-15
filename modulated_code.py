@@ -154,7 +154,7 @@ def converge_closest_points_on_mesh(s, root_box):
 			change_mean_diff = mean_distances[i-1] - mean_distances[i]
 
 		# Check to see if we can be done
-		if change_mean_diff < .000001 or i > 0 or mean_distance < .001:
+		if change_mean_diff < .000001 or i > 100 or mean_distance < .001:
 			done = True
 
 		# Calculate the new f_reg using the weighted matrices
