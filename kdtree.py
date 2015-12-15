@@ -1,7 +1,7 @@
 import numpy
+import time
 from Queue import Queue
 from prog_3_functions import *
-import time
 
 # This class defines a bounding box, which has an upper and lower corner
 # Bounding boxes can be leaves, which means they contain a triangle, or not in which case they have subBoxes
@@ -92,7 +92,8 @@ def makeBox(boxes):
     return BoundingBox(mins, maxes)
     
 #Finds the shortest distance between triangle t and point p
-def pointToTriangle(t, p): 
+def pointToTriangle(t, p):
+    # get_unit_vec(p)
     p2 = closest_point_on_triangle(p, t)
     return find_distance(p, p2)
 
@@ -199,6 +200,21 @@ def constructTree(boxes):
                 listQueue.put(l2)
                 boxQueue.put(box2)
     return b
+
+def construct_tree(boxes):
+    # Construct the KD tree
+    root_box = constructTree(boxes)
+    count = 0
+    q = Queue()
+    q.put(root_box)
+    while not q.empty():
+        node = q.get()
+        if (node.leaf):
+            count=count+1
+        else:
+            for box in node.subBoxes:
+                q.put(box)
+    return root_box
             
 
 # b1 = BoundingBox([-12.513461, -27.024874, -14.898345], [-16.716616, -29.941799, -19.676682])

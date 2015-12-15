@@ -2,6 +2,8 @@ import math
 import numpy
 
 _EPS = numpy.finfo(float).eps * 4.0
+
+# Performs a cloud to cloud registration
 def get_frame(cloud1, cloud2):
     cloud1 = numpy.array(cloud1)
     cloud1_original = cloud1
@@ -34,6 +36,8 @@ def get_frame(cloud1, cloud2):
     t = numpy.dot(R.T, centroid_2) - centroid_1
     return Frame(R.T, -t)
 
+# A frame class that holds rotation and translation matrices
+# It also has functions to perform registrations on vectors, other frames, and lists of points.
 class Frame:
     def __init__(self, rotation = None, translation = None):
         if rotation is None:
@@ -67,6 +71,7 @@ class Frame:
             new_cloud.append(new_point[0].tolist())
         return new_cloud
 
+# Given a triangle, this returns the associated plane given by a point and the normal to that plane
 def get_plane(triangle):
     apex = numpy.array(triangle[0])
     vec_1 = numpy.array(triangle[1]) - numpy.array(triangle[0])
@@ -74,13 +79,16 @@ def get_plane(triangle):
     vec_norm = get_unit_vec(numpy.cross(vec_1, vec_2))
     return [apex, vec_norm]
 
+# Returns the unit vector of a given vector
 def get_unit_vec(vector):
     magnitude = math.sqrt(numpy.dot(numpy.array(vector), numpy.array(vector).T))
     return numpy.array(vector)/magnitude
 
+# Gets the orthogonal projection of a vector onto a plane
 def get_ortho_proj(vector, plane):
     return numpy.array(vector) - numpy.dot(numpy.array(vector) - numpy.array(plane[0]), numpy.array(plane[1])) * numpy.array(plane[1])
 
+# Gets the projection of a point in a plane, but outside of a triangle, onto the triangle
 def get_proj_on_line(point, vert_1, vert_2):
     c, p, q = numpy.array(point), numpy.array(vert_1), numpy.array(vert_2)
     lam_top = numpy.dot(c-p, q-p)
@@ -90,6 +98,7 @@ def get_proj_on_line(point, vert_1, vert_2):
     # print(lam_star)
     return p + lam_star*(q - p)
 
+# Given a point and a triangle, this returns the closest point on that triangle
 def closest_point_on_triangle(point, triangle):
     p, q, r = numpy.array(triangle[0]), numpy.array(triangle[1]), numpy.array(triangle[2])
     c = numpy.array(get_ortho_proj(point, get_plane(triangle)))
@@ -113,6 +122,7 @@ def closest_point_on_triangle(point, triangle):
     else:
         return get_proj_on_line(c, r, q)
 
+# Returns the Euclidean distance between two points
 def find_distance(point_1, point_2):
     p_1, p_2 = numpy.array(point_1), numpy.array(point_2)
     return numpy.linalg.norm(p_2 - p_1)
