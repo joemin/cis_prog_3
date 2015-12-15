@@ -19,6 +19,7 @@ Rough Code Outline:
 """
 
 import numpy
+import sys
 from math import sqrt
 
 
@@ -58,28 +59,31 @@ def leastSquares(samplePoints, qPoints):
     l = numpy.array(numpy.linalg.lstsq(A, b)[0])
     return l
 
-def get_all_q(c, atlas, lambdas, triangle_indices):
+def get_all_q(c, mesh, lambdas, closest_indices):
     num_samples = len(c)
-    print num_samples, len(triangle_indices)
-    num_modes = len(atlas)
+    num_modes = len(mesh)
     q = []
+
     for i in range(num_samples):
         q.append([])
-        index_a = triangle_indices[i][0]
-        print("HERE")
-        print(triangle_indices[0])
-        index_b = triangle_indices[i][1]
-        index_c = triangle_indices[i][2]
-        m_s = atlas[0][index_a]
-        m_t = atlas[0][index_b]
-        m_u = atlas[0][index_c]
-        print m_s
-        for j in range(num_modes):
-            # print()
-            if not (j == 0):
-                m_s = (m_s + lambdas[j]*numpy.array(atlas[j][index_a])).tolist()
-                m_t = (m_t + lambdas[j]*numpy.array(atlas[j][index_b])).tolist()
-                m_u = (m_u + lambdas[j]*numpy.array(atlas[j][index_c])).tolist()
+        index_a = closest_indices[i][0]
+        # print("HERE")
+        # print(closest_indices[0])
+        index_b = closest_indices[i][1]
+        index_c = closest_indices[i][2]
+        m_s = mesh[index_a]
+        m_t = mesh[index_b]
+        m_u = mesh[index_c]
+        # # print "m_s", m_s
+        # for j in range(num_modes):
+        #     if not (j == 0):
+        #         if i == 43 or i == 42:
+        #             print j, atlas[j][index_b], lambdas[j]
+        #             print "m_t", m_t, "m_s", m_s
+        #             print (m_t + lambdas[j]*numpy.array(atlas[j][index_b])).tolist()
+        #         m_s = (m_s + lambdas[j]*numpy.array(atlas[j][index_a])).tolist()
+        #         m_t = (m_t + lambdas[j]*numpy.array(atlas[j][index_b])).tolist()
+        #         m_u = (m_u + lambdas[j]*numpy.array(atlas[j][index_c])).tolist()
                 # print atlas[j][index_a], lambdas[j]
             # else:
         triangle = [m_s, m_t, m_u]
@@ -87,13 +91,13 @@ def get_all_q(c, atlas, lambdas, triangle_indices):
         bary_coords = numpy.array(barycentric_coordinates(c[i], triangle))
         for j in range(num_modes):
             if (j == 0):
-                q.append(atlas[j][i])
+                q.append(mesh[i])
             else:
-                q_x = bary_coords[0]*atlas[j][i][0][0] + bary_coords[1]*atlas[j][i][1][0] + bary_coords[2]*atlas[j][i][2][0]
-                q_y = bary_coords[0]*atlas[j][i][0][1] + bary_coords[1]*atlas[j][i][1][1] + bary_coords[2]*atlas[j][i][2][1]
-                q_z = bary_coords[0]*atlas[j][i][0][2] + bary_coords[1]*atlas[j][i][1][2] + bary_coords[2]*atlas[j][i][2][2]
+                q_x = bary_coords[0]*mesh[index_a][0] + bary_coords[1]*mesh[index_b][0] + bary_coords[2]*mesh[index_c][0]
+                q_y = bary_coords[0]*mesh[index_a][1] + bary_coords[1]*mesh[index_b][1] + bary_coords[2]*mesh[index_c][1]
+                q_z = bary_coords[0]*mesh[index_a][2] + bary_coords[1]*mesh[index_b][2] + bary_coords[2]*mesh[index_c][2]
                 # current_q = computeQValues()
-            q[i].append([q_x, q_y, q_z])
+                q[i].append([q_x, q_y, q_z])
 
 # Calculate the barycentric coordinates of a given point in a given triangle
 # Input: a triangle, and a point inside that triangle
@@ -108,13 +112,6 @@ def barycentric_coordinates(point, triangle):
     # print(pbc)
     area_abc = triangle_area(triangle)
     # print(area_abc)
-
-
-
-    # SOLVE THIS
-
-
-
     area_pab = triangle_area(pab)
     area_pac = triangle_area(pac)
     area_pbc = triangle_area(pbc)
@@ -122,7 +119,7 @@ def barycentric_coordinates(point, triangle):
     alpha = area_pbc/area_abc
     beta = area_pac/area_abc
     gamma = area_pab/area_abc
-    print alpha, beta, gamma
+    # print alpha, beta, gamma
     bary_coords.append(alpha)
     bary_coords.append(beta)
     bary_coords.append(gamma)
@@ -134,10 +131,11 @@ def barycentric_coordinates(point, triangle):
 def triangle_area(triangle):
     a = vector_length(triangle[0], triangle[1])
     b = vector_length(triangle[0], triangle[2])
-    c = vector_length(triangle[1],  triangle[2])
-    # print a, b, c
+    c = vector_length(triangle[1], triangle[2])
     s = (a + b + c)/2.0
     # print(s)
+    if abs(s*(s-a)*(s-b)*(s-c)) < .00001:
+        return 0
     return sqrt(s*(s-a)*(s-b)*(s-c))
 
 # Calculate the euclidean distance between two points
@@ -145,7 +143,12 @@ def triangle_area(triangle):
 # Output: The distance between them
 def vector_length(point1, point2):
     p1 = numpy.array(point1)
-    p2 = numpy.array(point2)
+    p2 = [0, 0, 0]
+    try:
+        p2 = numpy.array(point2)
+    except:
+        print(point2)
+        sys.exit()
     return numpy.linalg.norm(p1-p2).tolist()
 
 

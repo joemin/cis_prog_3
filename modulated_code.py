@@ -91,9 +91,11 @@ def get_input(args):
 		i_1, i_2, i_3 = int(current_indices[0].strip()), int(current_indices[1].strip()), int(current_indices[2].strip())
 		triangles.append([i_1, i_2, i_3])
 		triangle = [vertices[triangles[i][0]], vertices[triangles[i][1]], vertices[triangles[i][2]]]
-		boxes.append(makeBoundingBox(triangle, i))
+		boxes.append(makeBoundingBox(triangle, [i_1, i_2, i_3]))
 	mesh_data.close()
 
+
+	# Read in the mode data
 	mode_data = open(args[5])
 	mode_data_first_line = mode_data.readline().split(" ")
 	n_vertices = int(mode_data_first_line[1].split("=")[1])
@@ -102,7 +104,7 @@ def get_input(args):
 	lambdas = []
 	for i in range(n_modes+1):
 		atlas.append([])
-		lambdas.append(0)
+		lambdas.append(0.0)
 		mode_data.readline()
 		for j in range(n_vertices):
 			current_vertex = mode_data.readline().split(",")
@@ -124,14 +126,14 @@ def converge_closest_points_on_mesh(s, root_box):
 	change_mean_diff = 999
 	# Continue to register s points until they are as close as possible to points on the mesh
 	while not done:
-		print i
+		# print i
 		c = []
-		closest_triangles = []
+		closest_indices = []
 		for point in s:
-			closest_triangle = findClosestTriangle(point, root_box) #kdtree method
+			closest_triangle, closest_index = findClosestTriangle(point, root_box) #kdtree method
 			closest_point = closest_point_on_triangle(point, closest_triangle)
 			c.append(closest_point.tolist())
-			closest_triangles.append(closest_triangle)
+			closest_indices.append(closest_index)
 		diffs = []
 		for j in range(len(s)):
 			diffs.append(find_distance(s[j], c[j]))
@@ -160,7 +162,8 @@ def converge_closest_points_on_mesh(s, root_box):
 		new_s = numpy.array(Frame.cloud_dot(f_reg, s))
 		s = new_s
 		i = i+1
-	return s, c, closest_triangles
+	# print len(s), len(c), len(closest_indices)
+	return s, c, closest_indices
 
 
 def print_mesh(vertices):

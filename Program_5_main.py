@@ -22,9 +22,8 @@ s = d
 # Repeat
 for i in range(5):
 	root_box = construct_tree(boxes)
-	s, c, closest_triangles = converge_closest_points_on_mesh(s, root_box)
-	print closest_triangles[:10]
-	q = get_all_q(c, atlas, lambdas, triangle_indices)
+	s, c, closest_indices = converge_closest_points_on_mesh(s, root_box)
+	q = get_all_q(c, vertices, lambdas, closest_indices)
 	lambdas = leastSquares(c, q)
 	vertices = computeMesh(lambdas, atlas)
 
