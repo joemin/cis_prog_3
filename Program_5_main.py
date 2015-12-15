@@ -27,7 +27,8 @@ for i in range(10):
 	root_box = construct_tree(boxes)
 	s, c, closest_indices = converge_closest_points_on_mesh(s, root_box)
 	q = get_all_q(c, vertices, closest_indices, len(atlas))
-	lambdas = leastSquares(numpy.array(c), numpy.array(q))
+	lambdas = leastSquares(numpy.array(s), numpy.array(q))
+	print (lambdas)
 	vertices = computeMesh(numpy.array(lambdas), numpy.array(atlas))
 	boxes = new_boxes(vertices, triangle_indices)
 

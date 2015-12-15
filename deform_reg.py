@@ -57,7 +57,7 @@ def leastSquares(samplePoints, qPoints):
     A = numpy.array(A).T
     b = b.T
     # print numpy.array(A)
-    l = numpy.array(numpy.linalg.lstsq(A, b)[0])
+    l = numpy.array(numpy.linalg.lstsq(A, b, .1)[0])
     # numpy.insert(l, 0, 0)
     return l
 
