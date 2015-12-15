@@ -22,16 +22,15 @@ s = d
 # Compute closest points on current mesh (use s to get c)
 # Calculate q, then lambdas, then new mesh.
 # Repeat
-for i in range(10):
+for i in range(100):
 	print i
 	root_box = construct_tree(boxes)
 	s, c, closest_indices = converge_closest_points_on_mesh(s, root_box)
-	q = get_all_q(c, vertices, closest_indices, len(atlas))
+	q = get_all_q(c, vertices, closest_indices, len(atlas), atlas)
 	lambdas = leastSquares(numpy.array(s), numpy.array(q))
-	print (lambdas)
 	vertices = computeMesh(numpy.array(lambdas), numpy.array(atlas))
 	boxes = new_boxes(vertices, triangle_indices)
 
+	print(lambdas)
 
-
-print_output(filename, n_samples, s, c)
+print_output(filename, n_samples, s, c, len(atlas) - 1, lambdas)

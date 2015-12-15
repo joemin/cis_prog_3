@@ -1,5 +1,6 @@
 from prog_3_functions import *
 from kdtree import *
+import sys
 
 
 # Takes the input arguments and parses them appropriately into data we need
@@ -36,7 +37,7 @@ def get_input(args):
 	index1 = 0
 	index2 = 0
 	try:
-		index1 = int(args[3].index("PA3-"))
+		index1 = int(args[3].index("PA4-"))
 	except:
 		index1 = int(args[3].index("PA5-"))
 	try:
@@ -74,7 +75,6 @@ def get_input(args):
 		d.append(Frame.vec_dot(Frame.frame_dot(F_B[i].inv_frame(), F_A[i]), a_tip).tolist()[0])
 	sample_readings.close()
 
-
 	# Read in the mesh data
 	mesh_data = open(args[4])
 	n_vertices = int(mesh_data.readline().strip())
@@ -94,7 +94,6 @@ def get_input(args):
 		boxes.append(makeBoundingBox(triangle, [i_1, i_2, i_3]))
 	mesh_data.close()
 
-
 	# Read in the mode data
 	mode_data = open(args[5])
 	mode_data_first_line = mode_data.readline().split(" ")
@@ -112,7 +111,6 @@ def get_input(args):
 			atlas[i].append([x, y, z])
 	mode_data.close()
 
-	# print_mesh(vertices, triangles)
 	return n_samples, d, vertices, triangles, boxes, filename, atlas, lambdas
 
 
@@ -166,19 +164,25 @@ def converge_closest_points_on_mesh(s, root_box):
 	return s, c, closest_indices
 
 
-def print_mesh(vertices):
-	print vertices
-
-
 # Prints the output to a file in the folder OUTPUT
 # Input: The target file name, the number of sample points, the s array, and the c array
-def print_output(filename, n_samples, s, c):
+def print_output(filename, n_samples, d, c, n_modes, lambdas):
 	################################################
 	### Final output
 	################################################
 	output = open("OUTPUT/" + filename + "-Output.txt", 'w')
-	output.write(str(len(c)) + " " + filename + "-Output.txt\n")
+	output.write(str(len(c)) + " " + filename + "-Output.txt" + " " + str(n_modes) + "\n")
 	# Print to standard out and also write to file
 	for i in range(n_samples):
-		output.write("%.2f" % s[i][0] + " " + "%.2f" % s[i][1] + " " + "%.2f" % s[i][2] + "\t%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.3f" % find_distance(s[i], c[i]) + "\n")
+		output.write("%.2f" % d[i][0] + " " + "%.2f" % d[i][1] + " " + "%.2f" % d[i][2] + "\t%.2f" % c[i][0] + " " + "%.2f" % c[i][1] + " " + "%.2f" % c[i][2] + "\t%.3f" % find_distance(d[i], c[i]) + "\n")
 	output.close()
+
+
+# n_samples, d, vertices, triangle_indices, boxes, filename, atlas, lambdas = get_input(sys.argv)
+# s = d
+# root_box = construct_tree(boxes)
+# s, c, closest_indices = converge_closest_points_on_mesh(s, root_box)
+# print_output(filename, n_samples, s, c)
+
+
+
